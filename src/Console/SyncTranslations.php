@@ -29,6 +29,8 @@ class SyncTranslations extends Command
 
     protected $availableLocales = [];
 
+    protected $availableDistDirectory = [];
+
     protected $filesystem;
 
     public function __construct(Filesystem $filesystem)
@@ -36,6 +38,7 @@ class SyncTranslations extends Command
         parent::__construct();
 
         $this->availableLocales = config('translation-loader.locales');
+        $this->availableRemoteDirectory = config('translation-loader.remote_directory');
         $this->filesystem = $filesystem;
         $this->translationModel = config('translation-loader.model');
     }
@@ -45,7 +48,8 @@ class SyncTranslations extends Command
         $this->dbTranslationsKeys = $this->getDatabaseLanguageLineKeys();
 
         $languageLines = collect();
-        foreach ($this->filesystem->allFiles(lang_path()) as $file) {
+        $mergedPath = $this->filesystem->allFiles(lang_path())->merge($this->filesystem->allFiles($this->availableRemoteDirectory));
+        foreach ($mergedPath as $file) {
             if (! in_array($file->getExtension(), $this->availableFileExtensions)) {
                 continue;
             }
